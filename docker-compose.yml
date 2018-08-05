@@ -1,0 +1,45 @@
+version: "3.5"
+services:
+  nina:
+    build:
+      context: .
+      args:
+        APP_HOME: "${PWD}"
+    image: nina-dev:latest
+    volumes:
+      - ./src:${PWD}/src
+      - ./test:${PWD}/test
+      - ./resources:${PWD}/resources
+      - m2:/usr/local/lib/m2
+      - ./log:${PWD}/log
+    command: repl
+    ports:
+      - 5888:5888
+      - 8001:80
+    depends_on:
+      - ldap
+
+  ldap:
+    image: osixia/openldap:latest
+    environment:
+      LDAP_ORGANISATION: Nina
+      LDAP_DOMAIN: thetripps.org
+      LDAP_ADMIN_PASSWORD: "omelet-sever-exposure-averse"
+    volumes:
+      - ldap-data:/var/lib/ldap
+      - ldap-conf:/etc/ldap/slapd.d
+    ports:
+      - 389:389
+      - 636:636
+
+  client:
+    build:
+      context: docker/client/
+    image: apache-directory-studio:2.0.0
+    ports:
+      - 6900:5900
+
+volumes:
+  m2:
+  ldap-data:
+  ldap-conf:
