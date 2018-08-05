@@ -1,0 +1,68 @@
+version: 1
+
+dn: dc=thetripps,dc=org
+objectClass: organization
+objectClass: dcObject
+objectClass: top
+dc: thetripps
+o: Nina
+
+dn: cn=admin,dc=thetripps,dc=org
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: admin
+userPassword:: e1NTSEF9Nm9jYUVsaWFuVm9CWGZLdHNHaWdQaThyTE9nekllNTg=
+description: LDAP administrator
+
+dn: cn=jdoe,ou=providers,ou=people,dc=thetripps,dc=org
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: dcObject
+objectClass: top
+cn: jdoe
+dc: people
+sn: Doe
+mail: john.doe@provider.com
+o: Nina
+
+dn: ou=people,dc=thetripps,dc=org
+objectClass: top
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=providers,ou=people,dc=thetripps,dc=org
+objectClass: top
+objectClass: organizationalUnit
+ou: providers
+
+dn: ou=mediators,ou=people,dc=thetripps,dc=org
+objectClass: top
+objectClass: organizationalUnit
+ou: mediators
+
+dn: ou=suppliers,ou=people,dc=thetripps,dc=org
+objectClass: top
+objectClass: organizationalUnit
+ou: suppliers
+
+dn: cn=jsmith,ou=suppliers,ou=people,dc=thetripps,dc=org
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: dcObject
+objectClass: top
+cn: jsmith
+dc: people
+sn: Smith
+mail: jane.smith@supplier.com
+o: Nina
+
+dn: cn=admin,ou=mediators,ou=people,dc=thetripps,dc=org
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: dcObject
+objectClass: top
+cn: admin
+dc: people
+sn: Admin
+mail: admin@openmarketshealth.com
+o: Nina
