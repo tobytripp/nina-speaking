@@ -14,7 +14,7 @@ services:
       - ./log:${PWD}/log
     command: repl
     ports:
-      - 5888:5888
+      - 4888:5888
       - 8001:80
     depends_on:
       - ldap
@@ -38,8 +38,11 @@ services:
     image: apache-directory-studio:2.0.0
     ports:
       - 6900:5900
+    volumes:
+      - client-home:/home/ldap/.ApacheDirectoryStudio
 
 volumes:
   m2:
   ldap-data:
   ldap-conf:
+  client-home:

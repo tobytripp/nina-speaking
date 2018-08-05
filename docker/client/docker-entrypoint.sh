@@ -8,11 +8,14 @@ function shutdown {
 
 rm -f /tmp/.X*lock
 
-DISPLAY=$DISPLAY \
-       xvfb-run --server-args="-screen 0 $GEOMETRY -ac +extension RANDR" \
-       /usr/local/bin/ApacheDirectoryStudio/ApacheDirectoryStudio &
+cd /home/ldap
+  DISPLAY=$DISPLAY \
+         xvfb-run --server-args="-screen 0 $GEOMETRY -ac +extension RANDR" \
+         /usr/local/bin/ApacheDirectoryStudio/ApacheDirectoryStudio &
 PID=$!
+cd -
 
+trap shutdown SIGTERM SIGINT
 for i in $(seq 1 10)
 do
   xdpyinfo -display $DISPLAY >/dev/null 2>&1
@@ -24,7 +27,6 @@ do
 done
 
 fluxbox -display $DISPLAY &
-x11vnc -usepw -forever -display $DISPLAY
+x11vnc -ncache 10 -usepw -forever -display $DISPLAY -noxdamage &
 
-trap shutdown SIGTERM SIGINT
 wait $PID
