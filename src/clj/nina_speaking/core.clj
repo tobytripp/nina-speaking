@@ -28,14 +28,10 @@
   (init {:ldap-host "ldap"
          :dn        "cn=admin,dc=thetripps,dc=org"
          :password  "omelet-sever-exposure-averse"
-         :port      8000})
-  (alter-var-root
-   #'system
-   (constantly (system/tl-system
-                {:ldap-host "ldap"
-                 :dn        "cn=admin,dc=thetripps,dc=org"
-                 :password  "omelet-sever-exposure-averse"
-                 :port      8000})))
+         :port      80})
+
   (start)
   (stop)
+
+  nina-speaking.core/system
   )

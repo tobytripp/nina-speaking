@@ -10,9 +10,9 @@
   component.
 
   See: github.com/stuartsierra/component"
-  [component]
+  [{:keys [storage] :as app}]
   (api/api
-   (api/GET "/index" [] (response/ok {:documents (ldap/all-people component)}))
+   (api/GET "/index" [] (response/ok {:documents (ldap/all-people storage)}))
    ))
 
 (defrecord WebServer [port http-server app]

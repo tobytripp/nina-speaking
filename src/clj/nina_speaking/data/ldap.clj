@@ -1,6 +1,7 @@
 (ns nina-speaking.data.ldap
   (:require [clj-ldap.client :as ldap]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log]))
 
 (def root-dn "dc=thetripps,dc=org")
 
@@ -11,9 +12,9 @@
     (if connection
       this
       (assoc this :connection
-             (ldap/connect {:host     host     ; "ldap"
-                            :bind-dn  dn       ; "cn=admin,dc=thetripps,dc=org"
-                            :password password ; "omelet-sever-exposure-averse"
+             (ldap/connect {:host     host
+                            :bind-dn  dn
+                            :password password
                             }))))
 
   (stop [{:keys [connection] :as this}]
@@ -28,4 +29,13 @@
 
 
 (defn all-people [{:keys [connection] :as this}]
-  (ldap/search connection (str "ou=people," root-dn)))
+  (try
+    (ldap/search connection (str "ou=people," root-dn))
+    (catch com.unboundid.ldap.sdk.LDAPSearchException e
+        (log/error "Search Exception" e)
+        [])))
+
+(comment
+  (let [store (:storage nina-speaking.core/system)]
+    (all-people store))
+  )

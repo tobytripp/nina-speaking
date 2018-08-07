@@ -8,6 +8,8 @@
                  [environ                       "1.1.0"]
                  [com.stuartsierra/component    "0.3.2"]
 
+                 [com.taoensso/timbre           "4.10.0"]
+
                  [metosin/compojure-api         "2.0.0-alpha21"]
                  [buddy/buddy-auth              "2.1.0"]
 
