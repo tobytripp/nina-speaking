@@ -2,15 +2,18 @@
   :description "An experiment in LDAP-backed SSO using JWT"
   :url "https://github.com/tobytripp/nina-speaking"
   :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+            :url  "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure           "1.9.0"]
+                 [environ                       "1.1.0"]
+                 [com.stuartsierra/component    "0.3.2"]
 
-                 [metosin/compojure-api "2.0.0-alpha21"]
+                 [metosin/compojure-api         "2.0.0-alpha21"]
+                 [buddy/buddy-auth              "2.1.0"]
 
-                 [org.clojars.pntblnk/clj-ldap "0.0.16"]
-
-                 [buddy/buddy-auth "2.1.0"]]
+                 [http-kit                      "2.2.0"]
+                 [org.clojars.pntblnk/clj-ldap  "0.0.16"]]
+  :ring {:handler nina-speaking.api.ldap/app}
 
   :main ^:skip-aot nina-speaking.core
 
@@ -21,8 +24,10 @@
 
   :plugins [[lein-pprint "1.1.1"]]
 
-  :profiles {:repl {:plugins [[cider/cider-nrepl "0.18.0-SNAPSHOT"]]}
+  :profiles {:dev     {:plugins [[lein-ring "0.12.4"]]}
+             :repl    {:plugins [ ;; [refactor-nrepl     "2.3.1"]
+                                 [cider/cider-nrepl  "0.18.0-SNAPSHOT"]]}
              :uberjar {:aot :all}}
   :global-vars {*warn-on-reflection* true
-                *assert* true}
+                *assert*             true}
   :jvm-opts ["-Xmx1g"])

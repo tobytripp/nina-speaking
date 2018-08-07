@@ -18,6 +18,7 @@ services:
       - 8001:80
     depends_on:
       - ldap
+#    command: ring server-headless 80
 
   ldap:
     image: osixia/openldap:latest
@@ -38,6 +39,8 @@ services:
     image: apache-directory-studio:2.0.0
     ports:
       - 6900:5900
+    depends_on:
+      - ldap
     volumes:
       - client-home:/home/ldap/.ApacheDirectoryStudio
 
