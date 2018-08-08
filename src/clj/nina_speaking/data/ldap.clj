@@ -32,8 +32,20 @@
   (try
     (ldap/search connection (str "ou=people," root-dn))
     (catch com.unboundid.ldap.sdk.LDAPSearchException e
-        (log/error "Search Exception" e)
-        [])))
+      (log/error "Search Exception" e)
+      [])))
+
+(defn add-record [{:keys [connection]} rdn attributes]
+  "Add a record at the given RDN with the specified attributes to the
+  credential-store."
+  (try
+    (ldap/add connection rdn attributes)
+    (catch com.unboundid.ldap.sdk.LDAPSearchException e
+      (log/error "LDAP insert Exception" e)
+      attributes)
+    (catch com.unboundid.ldap.sdk.LDAPException e
+      (log/warn "LDAP entry already exists" e)
+      attributes)))
 
 (comment
   (let [store (:storage nina-speaking.core/system)]

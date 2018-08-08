@@ -27,8 +27,7 @@
   :plugins [[lein-pprint "1.1.1"]]
 
   :profiles {:dev     {:plugins [[lein-ring "0.12.4"]]}
-             :repl    {:plugins [ ;; [refactor-nrepl     "2.3.1"]
-                                 [cider/cider-nrepl  "0.18.0-SNAPSHOT"]]}
+             :repl    {:plugins [[cider/cider-nrepl "0.17.0"]]}
              :uberjar {:aot :all}}
   :global-vars {*warn-on-reflection* true
                 *assert*             true}
