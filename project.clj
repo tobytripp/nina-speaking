@@ -11,17 +11,18 @@
                  [com.taoensso/timbre           "4.10.0"]
 
                  [metosin/compojure-api         "2.0.0-alpha21"]
-                 [buddy/buddy-auth              "2.1.0"]
-
                  [http-kit                      "2.2.0"]
+                 [buddy/buddy-auth              "2.1.0"]
+                 [hiccup                        "1.0.5"]
+
                  [org.clojars.pntblnk/clj-ldap  "0.0.16"]]
   :ring {:handler nina-speaking.api.ldap/app}
 
   :main ^:skip-aot nina-speaking.core
 
-  :target-path "target/%s"
-  :source-paths ["src", "src/clj"]
-  :test-paths ["test", "test/clj", "src/clj/test"]
+  :target-path    "target/%s"
+  :source-paths   ["src", "src/clj"]
+  :test-paths     ["test", "test/clj", "src/clj/test"]
   :resource-paths ["resources"]
 
   :plugins [[lein-pprint "1.1.1"]]

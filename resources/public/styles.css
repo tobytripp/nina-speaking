@@ -1,0 +1,41 @@
+body {
+   font: 21px sans-serif;
+   padding: 2em 6em;
+   margin: 0;
+
+   box-sizing:         border-box;
+   -webkit-box-sizing: border-box;
+   -moz-box-sizing:    border-box;
+}
+
+
+form {
+   width:  30em;
+   margin: 0 auto;
+
+   background: #FFF;
+}
+
+form fieldset {
+   width: 100%;
+   border-radius: 5px;
+}
+
+form fieldset label {
+   margin:  0 0.5em 0.1em 0;
+   padding: 0.5em 0;
+   width: 70%;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+   width:   95%;
+   margin:  0 0 5px;
+   padding: 10px;
+}
+
+
+
+input:required::before {
+   content: "*Required";
+}
