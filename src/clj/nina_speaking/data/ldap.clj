@@ -35,6 +35,17 @@
       (log/error "Search Exception" e)
       [])))
 
+(defn by-email [{:keys [connection]} email]
+  (try
+    (first
+     (ldap/search connection (str "ou=people," root-dn)
+                  {:filter (str "mail=" email)
+                   :attributes [:cn :mail :sn :ou]}))
+    (catch com.unboundid.ldap.sdk.LDAPSearchException e
+      (log/error "Search Exception" e)
+      [])))
+
+
 (defn add-record [{:keys [connection]} rdn attributes]
   "Add a record at the given RDN with the specified attributes to the
   credential-store."
