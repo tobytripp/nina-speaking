@@ -39,13 +39,21 @@
   "Add a record at the given RDN with the specified attributes to the
   credential-store."
   (try
+    (log/debugf "LDAP insert: %s: %s" rdn attributes)
     (ldap/add connection rdn attributes)
     (catch com.unboundid.ldap.sdk.LDAPSearchException e
       (log/error "LDAP insert Exception" e)
       attributes)
     (catch com.unboundid.ldap.sdk.LDAPException e
-      (log/warn "LDAP entry already exists" e)
+      (log/warn (format "LDAP insert failed: %s" attributes) e)
       attributes)))
+
+(defn add-records [store recordm]
+  (reduce-kv (fn [memo rdn rec]
+               (conj memo rdn (log/spy (add-record store rdn rec))))
+             []
+             recordm))
+
 
 (comment
   (let [store (:storage nina-speaking.core/system)]
