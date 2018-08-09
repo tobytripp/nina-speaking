@@ -27,7 +27,8 @@
 
   :plugins [[lein-pprint "1.1.1"]]
 
-  :profiles {:dev     {:plugins [[lein-ring "0.12.4"]]}
+  :profiles {:dev     {:plugins      [[lein-ring "0.12.4"]]
+                       :dependencies [[ring/ring-mock "0.3.2"]]}
              :repl    {:plugins [[cider/cider-nrepl "0.17.0"]]}
              :uberjar {:aot :all}}
   :global-vars {*warn-on-reflection* true

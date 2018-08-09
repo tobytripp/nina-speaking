@@ -1,4 +1,4 @@
-(ns nina-speaking.views.credentials
+(ns nina-speaking.views.credentials.new
   (:require [hiccup.core :refer :all]
             [hiccup.form :refer [form-to]]
             [hiccup.page :refer [html5 include-css]]))

@@ -1,13 +1,14 @@
 (ns nina-speaking.api.ldap
-  (:require [compojure.api.sweet        :as api :refer [GET POST]]
-            [compojure.core             :as core]
-            [compojure.route            :as static]
-            [org.httpkit.server         :as http]
-            [com.stuartsierra.component :as component]
-            [ring.util.http-response    :as response]
+  (:require [compojure.api.sweet             :as api :refer [GET POST]]
+            [compojure.core                  :as core]
+            [compojure.route                 :as static]
+            [org.httpkit.server              :as http]
+            [com.stuartsierra.component      :as component]
+            [ring.util.http-response         :as response]
+            [ring.middleware.nested-params :refer [wrap-nested-params]]
 
-            [nina-speaking.data.ldap    :as ldap]
-            [nina-speaking.views.credentials :as views]))
+            [nina-speaking.data.ldap         :as ldap]
+            [nina-speaking.views.credentials.new :as views]))
 
 (defn api-routes
   "Return the web handler function as a closure over the application
@@ -16,13 +17,14 @@
   See: github.com/stuartsierra/component"
   [{:keys [storage] :as app}]
   (api/api
+   (GET "/credential/:email" []
+     :path-params [email]
+     (response/ok {:document (ldap/by-email storage email)}))
    (api/context "/credentials" []
+     :middleware [wrap-nested-params]
      (GET "/index" [] (response/ok {:documents (ldap/all-people storage)}))
      (POST "/" request
-       ;; params come in “Rails” style: "credentials[email]", need to remember
-       ;; how to destructure them here.
-       ;; :form-params [email role password]
-       (response/ok {:parameters (:form-params request)}))
+       (response/created "/credentials/index"))
      )))
 
 (defn app-routes [app]
@@ -40,7 +42,9 @@
     (if http-server
       this
       (assoc this :http-server
-             (http/run-server (app-routes app) {:port port}))))
+             (http/run-server
+              (app-routes app)
+              {:port port}))))
 
   (stop  [{:keys [http-server] :as this}]
     (if (nil? http-server)

@@ -25,13 +25,20 @@
   (component/start (system/new-system {})))
 
 (comment
-  (init {:ldap-host "ldap"
-         :dn        "cn=admin,dc=thetripps,dc=org"
-         :password  "omelet-sever-exposure-averse"
-         :port      80})
+  (def dev-systems "Last system Component" (atom ()))
+  (swap! dev-systems
+         conj
+         (init
+          {:ldap-host "ldap"
+           :dn         "cn=admin,dc=thetripps,dc=org"
+           :password   "omelet-sever-exposure-averse"
+           :port       80}))
 
   (start)
   (stop)
+
+  (do (stop)
+      (start))
 
   nina-speaking.core/system
   )
