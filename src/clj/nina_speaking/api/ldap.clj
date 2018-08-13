@@ -6,6 +6,7 @@
             [com.stuartsierra.component      :as component]
             [ring.util.http-response         :as response]
             [ring.middleware.nested-params :refer [wrap-nested-params]]
+            [taoensso.timbre :as log]
 
             [nina-speaking.data.ldap         :as ldap]
             [nina-speaking.views.credentials.new :as views]))
@@ -23,8 +24,12 @@
    (api/context "/credentials" []
      :middleware [wrap-nested-params]
      (GET "/index" [] (response/ok {:documents (ldap/all-people storage)}))
-     (POST "/" request
-       (response/created "/credentials/index"))
+     (POST "/" req
+       (let [{:keys [params]} req
+             created          (ldap/add-person storage (get params "credentials"))]
+         (log/infof "CREATED: %s" created)
+         (response/created (str "/credential/"
+                                (java.net.URLEncoder/encode (:mail created) "UTF-8")))))
      )))
 
 (defn app-routes [app]

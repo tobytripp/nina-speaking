@@ -1,5 +1,6 @@
 (defproject nina-speaking "0.1.0-SNAPSHOT"
   :description "An experiment in LDAP-backed SSO using JWT"
+  ;; TODO: unify this url somehow (nina-speaking.com?) 
   :url "https://github.com/tobytripp/nina-speaking"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
@@ -28,7 +29,8 @@
   :plugins [[lein-pprint "1.1.1"]]
 
   :profiles {:dev     {:plugins      [[lein-ring "0.12.4"]]
-                       :dependencies [[ring/ring-mock "0.3.2"]]}
+                       :dependencies [[ring/ring-mock "0.3.2"]
+                                      [org.clojure/test.check "0.10.0-alpha3"]]}
              :repl    {:plugins [[cider/cider-nrepl "0.17.0"]]}
              :uberjar {:aot :all}}
   :global-vars {*warn-on-reflection* true
