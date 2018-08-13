@@ -29,7 +29,8 @@
              created          (ldap/add-person storage (get params "credentials"))]
          (log/infof "CREATED: %s" created)
          (response/created (str "/credential/"
-                                (java.net.URLEncoder/encode (:mail created) "UTF-8")))))
+                                (java.net.URLEncoder/encode (:mail created) "UTF-8"))
+                           {:document created})))
      )))
 
 (defn app-routes [app]
