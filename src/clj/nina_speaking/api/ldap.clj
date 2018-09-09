@@ -1,14 +1,14 @@
 (ns nina-speaking.api.ldap
-  (:require [compojure.api.sweet             :as api :refer [GET POST]]
-            [compojure.core                  :as core]
-            [compojure.route                 :as static]
-            [org.httpkit.server              :as http]
-            [com.stuartsierra.component      :as component]
-            [ring.util.http-response         :as response]
+  (:require [compojure.api.sweet        :as api :refer [GET POST]]
+            [compojure.core             :as core]
+            [compojure.route            :as static]
+            [org.httpkit.server         :as http]
+            [com.stuartsierra.component :as component]
+            [ring.util.http-response    :as response]
             [ring.middleware.nested-params :refer [wrap-nested-params]]
-            [taoensso.timbre :as log]
+            [taoensso.timbre            :as log]
 
-            [nina-speaking.data.ldap         :as ldap]
+            [nina-speaking.data.ldap    :as ldap]
             [nina-speaking.views.credentials.new :as views]))
 
 (defn api-routes
@@ -18,12 +18,16 @@
   See: github.com/stuartsierra/component"
   [{:keys [storage] :as app}]
   (api/api
+   {:middleware [wrap-nested-params]}
+
    (GET "/credential/:email" []
      :path-params [email]
      (response/ok {:document (ldap/by-email storage email)}))
+
    (api/context "/credentials" []
-     :middleware [wrap-nested-params]
+
      (GET "/index" [] (response/ok {:documents (ldap/all-people storage)}))
+
      (POST "/" req
        (let [{:keys [params]} req
              created          (ldap/add-person storage (get params "credentials"))]
