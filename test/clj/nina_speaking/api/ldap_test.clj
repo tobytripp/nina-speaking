@@ -1,5 +1,6 @@
 (ns nina-speaking.api.ldap-test
   (:require [clojure.test :refer :all]
+            [clojure.java.io                    :as io]
             [com.stuartsierra.component         :as component]
             [cheshire.core                      :as json]
             [ring.mock.request                  :as mock]
@@ -35,22 +36,29 @@
   (with-storage
     (fn [store]
       (let [handler  (api-routes {:storage store})
+            record   {:dc   "ou=people"
+                      :mail "toby@tripp.net"
+                      :dn   "cn=toby,ou=moderator,ou=people,dc=thetripps,dc=org"
+                      :sn   "Unknown"
+                      :cn   "toby"}
             response (handler
                       (-> (mock/request :post "/credentials/")
                          (mock/body
                           {"credentials[email]"    "toby@tripp.net"
-                           "credentials[role]"     "mediator"
+                           "credentials[role]"     "moderator"
                            "credentials[password]" "angry-hippo-marble-run"})))]
-        (is (= 201 (:status response)))
-        (is (= {"Location"     "/credential/toby%40tripp.net"
-                "Content-Type" "application/json; charset=utf-8"}
-               (:headers response)))
-        (is (= {:document
-                {:dc   "ou=people"
-                 :mail "toby@tripp.net"
-                 :dn   "cn=toby,ou=mediator,ou=people,dc=thetripps,dc=org"
-                 :sn   "Unknown"
-                 :cn   "toby"}}
-               (parse-stream (clojure.java.io/reader (:body response))
-                             true)))))))
+        (testing "POST to /credentials"
+          (is (= 201 (:status response)))
+          (is (= {"Location"     "/credential/toby%40tripp.net"
+                  "Content-Type" "application/json; charset=utf-8"}
+                 (:headers response)))
+          (is (= {:document record}
+                 (parse-stream (io/reader (:body response))
+                               true))))
+        (testing "Location response"
+          (let [follow-request
+                (mock/request :get (get-in response [:headers "Location"]))]
+            (is (= {:document record}
+                   (parse-stream (io/reader (:body (handler follow-request)))
+                                 true)))))))))
 
