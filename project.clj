@@ -1,6 +1,6 @@
 (defproject nina-speaking "0.1.0-SNAPSHOT"
   :description "An experiment in LDAP-backed SSO using JWT"
-  ;; TODO: unify this url somehow (nina-speaking.com?) 
+  ;; TODO: unify this url somehow (nina-speaking.com?)
   :url "https://github.com/tobytripp/nina-speaking"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
@@ -14,6 +14,7 @@
                  [metosin/compojure-api         "2.0.0-alpha21"]
                  [http-kit                      "2.2.0"]
                  [buddy/buddy-auth              "2.1.0"]
+                 [buddy/buddy-hashers           "1.3.0"]
                  [hiccup                        "1.0.5"]
 
                  [org.clojars.pntblnk/clj-ldap  "0.0.16"]]

@@ -1,7 +1,8 @@
 (ns nina-speaking.data.ldap
-  (:require [clj-ldap.client :as ldap]
+  (:require [clj-ldap.client            :as ldap]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]))
+            [buddy.hashers              :as hashers]
+            [taoensso.timbre            :as log]))
 
 (def root-dn "dc=thetripps,dc=org")
 (def person-root-dn (str "ou=people," root-dn))
@@ -58,16 +59,20 @@
 
   Returns `nil` if the record already exists."
   [{:keys [connection]} dn attributes]
-  (try
-    (if (ldap/get connection dn #{:cn})
-      (log/debugf "DN %s 👍" dn)
-      (ldap/add connection dn attributes))
-    (catch com.unboundid.ldap.sdk.LDAPSearchException e
-      (log/error "LDAP insert Exception" e)
-      attributes)
-    (catch com.unboundid.ldap.sdk.LDAPException e
-      (log/warn (format "LDAP insert failed: %s" attributes) e)
-      attributes)))
+  (letfn [(hash-values [m ks]
+            (map #(update m % (fn [v] (if v (hashers/derive v) v))) ks))]
+    (try
+      (if (ldap/get connection dn #{:cn})
+        (log/debugf "DN %s 👍" dn)
+        (ldap/add connection dn
+                  (log/spy
+                   (hash-values attributes [:userPassword :password]))))
+      (catch com.unboundid.ldap.sdk.LDAPSearchException e
+        (log/error "LDAP insert Exception" e)
+        attributes)
+      (catch com.unboundid.ldap.sdk.LDAPException e
+        (log/warn (format "LDAP insert failed: %s" attributes) e)
+        attributes))))
 
 (defn add-records
   "Add a Map of records to the credential store.

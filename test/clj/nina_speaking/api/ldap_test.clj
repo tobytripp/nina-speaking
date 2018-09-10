@@ -37,19 +37,19 @@
     (fn [store]
       (let [handler  (api-routes {:storage store})
             record   {:dc   "ou=people"
-                      :mail "toby@tripp.net"
+                      :mail "toby@tripp.test"
                       :dn   "cn=toby,ou=moderator,ou=people,dc=thetripps,dc=org"
                       :sn   "Unknown"
                       :cn   "toby"}
             response (handler
                       (-> (mock/request :post "/credentials/")
                          (mock/body
-                          {"credentials[email]"    "toby@tripp.net"
+                          {"credentials[email]"    "toby@tripp.test"
                            "credentials[role]"     "moderator"
                            "credentials[password]" "angry-hippo-marble-run"})))]
         (testing "POST to /credentials"
           (is (= 201 (:status response)))
-          (is (= {"Location"     "/credential/toby%40tripp.net"
+          (is (= {"Location"     "/credential/toby%40tripp.test"
                   "Content-Type" "application/json; charset=utf-8"}
                  (:headers response)))
           (is (= {:document record}

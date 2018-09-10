@@ -98,25 +98,25 @@
   (with-storage
     (fn [store]
       (add-person store
-                  {:email    "toby@tripp.net"
+                  {:email    "toby@tripp.test"
                    :role     "code-monkey"
                    :password "angry-monkeys-code"})
       (is (= {:cn   "toby"
               :dc   "ou=people"
               :sn   "Unknown"
               :dn   "cn=toby,ou=code-monkey,ou=people,dc=thetripps,dc=org"
-              :mail "toby@tripp.net"}
-             (by-email store "toby@tripp.net")))
+              :mail "toby@tripp.test"}
+             (by-email store "toby@tripp.test")))
 
       (is (= (add-person store
-                         {:email    "thomas@tripp.net"
+                         {:email    "thomas@tripp.test"
                           :role     "code-monkey"
                           :password "angry-monkeys-code"})
              {:cn   "thomas"
               :dc   "ou=people"
               :sn   "Unknown"
               :dn   "cn=thomas,ou=code-monkey,ou=people,dc=thetripps,dc=org"
-              :mail "thomas@tripp.net"}))
+              :mail "thomas@tripp.test"}))
       )))
 
 (deftest finding-people-by-email
@@ -137,6 +137,25 @@
                 :sn   "Doe"
                 :mail "john.doe@provider.com"}
                (by-email store "john.doe@provider.com")))))))
+
+(deftest password-hashing
+  (with-storage
+    (fn [store]
+      (add-person store
+                  {:email    "toby@tripp.test"
+                   :role     "code-monkey"
+                   :password "angry-monkeys-code"})
+
+      (is (not= "angry-monkeys-code"
+                (get-in
+                 (first
+                  (search store
+                          (str "mail=toby@tripp.test")
+                          "ou=people,dc=thetripps,dc=org"
+                          {:attributes #{:cn :userPassword}}))
+                 [:userPassword]))))))
+
+
 
 (comment
   (run-tests 'nina-speaking.data.ldap-test)
