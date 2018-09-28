@@ -8,7 +8,7 @@
             [cheshire.core :refer [parse-stream]]
 
             [nina-speaking.test-support.storage :refer :all]
-            [nina-speaking.data.ldap            :as storage]
+            [nina-speaking.data.storage.ldap            :as storage]
             [nina-speaking.api.ldap :refer :all :as subject]))
 
 (defn parse-body [body]

@@ -1,4 +1,4 @@
-(ns nina-speaking.data.ldap
+(ns nina-speaking.data.storage.ldap
   (:require [clj-ldap.client            :as ldap]
             [com.stuartsierra.component :as component]
             [buddy.hashers              :as hashers]
@@ -60,7 +60,10 @@
   Returns `nil` if the record already exists."
   [{:keys [connection]} dn attributes]
   (letfn [(hash-values [m ks]
-            (map #(update m % (fn [v] (if v (hashers/derive v) v))) ks))]
+            (reduce
+             (fn [m' k] (update m' k hashers/derive))
+             m
+             (filter #(% m) ks)))]
     (try
       (if (ldap/get connection dn #{:cn})
         (log/debugf "DN %s 👍" dn)
@@ -75,7 +78,7 @@
         attributes))))
 
 (defn add-records
-  "Add a Map of records to the credential store.
+  "Add a Map, `recordm` of records to the credential `store`.
 
   Each Map Entry key is taken to be the record's RDN and the value is the
   record's attributes."

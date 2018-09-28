@@ -8,7 +8,7 @@
             [ring.middleware.nested-params :refer [wrap-nested-params]]
             [taoensso.timbre            :as log]
 
-            [nina-speaking.data.ldap    :as ldap]
+            [nina-speaking.data.storage.ldap    :as ldap]
             [nina-speaking.views.credentials.new :as views]))
 
 (defn api-routes

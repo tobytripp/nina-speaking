@@ -1,19 +1,16 @@
-(ns nina-speaking.data.ldap-test
-  (:require [clojure.test :refer :all]
-            [clojure.test.check :as check]
+(ns nina-speaking.data.storage.ldap-test
+  (:require [clj-ldap.client :as ldap]
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as sgen]
+            [clojure.test :refer :all]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [clojure.test.check.clojure-test :refer [defspec]]
-
-            [taoensso.timbre :as log]
-
             [com.stuartsierra.component :as component]
+            [nina-speaking.data.storage.ldap :refer :all]
+            [nina-speaking.spec.ldap :as spec]
             [nina-speaking.test-support.storage :refer :all]
-
-            [nina-speaking.data.ldap :refer :all]
-
-            ;; TODO: don’t forget to remove me!
-            [clj-ldap.client :as ldap]))
+            [taoensso.timbre :as log]))
 
 (deftest cleaning-up-after-ldap-tests
   (let [host                           "ldap"
@@ -65,6 +62,13 @@
 
         (is (= ["jdoe" "jsmith"] (filter identity (map :cn (all-people store)))))
         ))))
+
+(defspec creating-arbitrary-ldap-records
+  100
+  (prop/for-all [rec (s/gen ::spec/record)]
+                (with-storage
+                  (fn [store]
+                    ))))
 
 (deftest adding-a-new-role
   (with-storage
@@ -158,7 +162,7 @@
 
 
 (comment
-  (run-tests 'nina-speaking.data.ldap-test)
+  (run-tests 'nina-speaking.data.storage.ldap-test)
 
   (gen/sample (gen/not-empty gen/string-alphanumeric))
 
@@ -168,7 +172,9 @@
               "(objectclass=*)"
               "ou=code-monkey,ou=people,dc=thetripps,dc=org"
               {:attributes [:cn]
-               :scope :subordinate})))
+               :scope      :subordinate})))
 
-  (> 1 0)
+  (< 1 2)
+
+  (sgen/generate (s/gen ::spec/email))
   )

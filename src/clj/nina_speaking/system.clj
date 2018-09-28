@@ -1,6 +1,6 @@
 (ns nina-speaking.system
   (:require [com.stuartsierra.component :as component]
-            [nina-speaking.data.ldap :as data]
+            [nina-speaking.data.storage.ldap :as data]
             [nina-speaking.api.ldap  :as api]))
 
 (defrecord AuthSystem [options storage api app]

@@ -1,6 +1,6 @@
 (ns nina-speaking.test-support.storage
   (:require [com.stuartsierra.component :as component]
-            [nina-speaking.data.ldap    :as storage]))
+            [nina-speaking.data.storage.ldap    :as storage]))
 
 (defn init-store [store]
   (let [org       {:objectClass #{"top" "organization" "dcObject"}
