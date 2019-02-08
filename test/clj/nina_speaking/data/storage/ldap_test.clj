@@ -2,6 +2,7 @@
   (:require [clj-ldap.client :as ldap]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
+            [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
@@ -11,6 +12,21 @@
             [nina-speaking.spec.ldap :as spec]
             [nina-speaking.test-support.storage :refer :all]
             [taoensso.timbre :as log]))
+
+(stest/instrument `add-record)
+
+(def ^:dynamic *test-store* (atom nil))
+
+(defn wrap-storage [f]
+  (with-storage
+    (fn [store]
+      (swap! *test-store*
+             (fn [old-store]
+               (if old-store old-store store)))
+      (f)
+      (swap! *test-store* (fn [_] nil)))))
+
+(use-fixtures :once wrap-storage)
 
 (deftest cleaning-up-after-ldap-tests
   (let [host                           "ldap"
@@ -42,33 +58,55 @@
       (finally (component/stop store)))))
 
 (deftest creating-ldap-records
-  (with-storage
-    (fn [store]
-      (let [joe  {:objectClass #{"organizationalPerson" "inetOrgPerson"
-                                 "dcObject" "top"}
-                  :cn          "jdoe"
-                  :dc          "people"
-                  :sn          "Doe"
-                  :mail        "john.doe@provider.com"}
-            jane {:objectClass #{"organizationalPerson" "inetOrgPerson"
-                                 "dcObject" "top"}
-                  :cn          "jsmith"
-                  :dc          "people"
-                  :sn          "Smith"
-                  :mail        "jane.smith@supplier.com"}]
-        (add-records store
-                     {"cn=jdoe,ou=providers,ou=people,dc=thetripps,dc=org"   joe
-                      "cn=jsmith,ou=suppliers,ou=people,dc=thetripps,dc=org" jane})
+  (let [joe  {:objectClass #{"organizationalPerson" "inetOrgPerson" "top"}
+              :cn          "jdoe"
+              :sn          "Doe"
+              :ou          "people"
+              :mail        "john.doe@producer.com"}
+        jane {:objectClass #{"organizationalPerson" "inetOrgPerson" "top"}
+              :cn          "jsmith"
+              :sn          "Smith"
+              :ou          "people"
+              :mail        "jane.smith@consumer.com"}
 
-        (is (= ["jdoe" "jsmith"] (filter identity (map :cn (all-people store)))))
-        ))))
+        rando {:objectClass #{"inetOrgPerson" "organizationalPerson" "top"},
+               :cn          "A",
+               :ou          "people"
+               :mail        "j0@8.VGT",
+               :sn          "M"}]
+    (is (s/valid? ::spec/person-record joe)
+        (s/explain-str ::spec/person-record joe))
+    (is (s/valid? ::spec/person-record jane)
+        (s/explain-str ::spec/person-record jane))
+    (is (s/valid? ::spec/person-record jane)
+        (s/explain-str ::spec/person-record rando))
+
+    (add-records @*test-store*
+                 {"cn=jdoe,ou=people,dc=thetripps,dc=org"   joe
+                  "cn=jsmith,ou=people,dc=thetripps,dc=org" jane
+                  "cn=A,ou=people,dc=thetripps,dc=org"      rando})
+
+    (is (= "cn=jdoe,ou=people,dc=thetripps,dc=org"
+           (dn-for joe "dc=thetripps,dc=org")))
+    (is (= ["A" "jdoe" "jsmith"]
+           (filter identity (map :cn (all-people @*test-store*)))))
+    ))
 
 (defspec creating-arbitrary-ldap-records
-  100
-  (prop/for-all [rec (s/gen ::spec/record)]
-                (with-storage
-                  (fn [store]
-                    ))))
+  40
+  (prop/for-all
+   [rec (s/gen ::spec/person-record)]
+   (let [dn             (dn-for rec "dc=thetripps,dc=org")
+         cn             (:cn rec)
+         {:keys [code]} (add-record @*test-store* dn rec)]
+     (is (= 0 code))
+     (is (contains?
+          (->> (all-people @*test-store*)
+             (map :cn)
+             (filter identity)
+             (map clojure.string/lower-case)
+             set)
+          (clojure.string/lower-case cn))))))
 
 (deftest adding-a-new-role
   (with-storage
@@ -78,17 +116,9 @@
                :dn "ou=cheeky-monkey,ou=people,dc=thetripps,dc=org"}]
              (search store "ou=cheeky-monkey"))))))
 
-(deftest adding-a-new-role
-  (with-storage
-    (fn [store]
-      (add-role store "0")
-      (is (= [{:ou "0"
-               :dn "ou=0,ou=people,dc=thetripps,dc=org"}]
-             (search store "ou=0"))))))
-
 
 (defspec upserting-new-roles
-  50
+  25
   (prop/for-all [role (gen/not-empty gen/string-alphanumeric)]
                 (with-storage
                   (fn [store]
@@ -96,7 +126,7 @@
                     (let [rdn (str "ou=" role)]
                       (= [{:ou role
                            :dn (format"ou=%s,ou=people,dc=thetripps,dc=org" role)}]
-                         (log/spy (search store (log/spy rdn)))))))))
+                         (search store rdn)))))))
 
 (deftest adding-a-person-given-attributes
   (with-storage
@@ -104,9 +134,8 @@
       (add-person store
                   {:email    "toby@tripp.test"
                    :role     "code-monkey"
-                   :password "angry-monkeys-code"})
+                   :password "angry-code-monkeys"})
       (is (= {:cn   "toby"
-              :dc   "ou=people"
               :sn   "Unknown"
               :dn   "cn=toby,ou=code-monkey,ou=people,dc=thetripps,dc=org"
               :mail "toby@tripp.test"}
@@ -115,9 +144,8 @@
       (is (= (add-person store
                          {:email    "thomas@tripp.test"
                           :role     "code-monkey"
-                          :password "angry-monkeys-code"})
+                          :password "angry-code-monkeys"})
              {:cn   "thomas"
-              :dc   "ou=people"
               :sn   "Unknown"
               :dn   "cn=thomas,ou=code-monkey,ou=people,dc=thetripps,dc=org"
               :mail "thomas@tripp.test"}))
@@ -128,19 +156,19 @@
     (fn [store]
       (let [joe {:objectClass #{"organizationalPerson" "inetOrgPerson"
                                 "dcObject" "top"}
-                 :cn          "jdoe"
+                 :cn          "jcdoe"
                  :dc          "people"
                  :sn          "Doe"
-                 :mail        "john.doe@provider.com"}]
+                 :mail        "john.c.doe@provider.com"}]
         (add-records store
-                     {"cn=jdoe,ou=providers,ou=people,dc=thetripps,dc=org" joe})
+                     {"cn=jcdoe,ou=people,dc=thetripps,dc=org" joe})
 
-        (is (= {:cn   "jdoe"
+        (is (= {:cn   "jcdoe"
                 :dc   "people"
-                :dn   "cn=jdoe,ou=providers,ou=people,dc=thetripps,dc=org"
+                :dn   "cn=jcdoe,ou=people,dc=thetripps,dc=org"
                 :sn   "Doe"
-                :mail "john.doe@provider.com"}
-               (by-email store "john.doe@provider.com")))))))
+                :mail "john.c.doe@provider.com"}
+               (by-email store "john.c.doe@provider.com")))))))
 
 (deftest password-hashing
   (with-storage

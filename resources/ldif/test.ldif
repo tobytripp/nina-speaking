@@ -14,7 +14,7 @@ cn: admin
 userPassword:: e1NTSEF9Nm9jYUVsaWFuVm9CWGZLdHNHaWdQaThyTE9nekllNTg=
 description: LDAP administrator
 
-dn: cn=jdoe,ou=providers,ou=people,dc=thetripps,dc=org
+dn: cn=jdoe,ou=producers,ou=people,dc=thetripps,dc=org
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
 objectClass: dcObject
@@ -30,22 +30,7 @@ objectClass: top
 objectClass: organizationalUnit
 ou: people
 
-dn: ou=providers,ou=people,dc=thetripps,dc=org
-objectClass: top
-objectClass: organizationalUnit
-ou: providers
-
-dn: ou=mediators,ou=people,dc=thetripps,dc=org
-objectClass: top
-objectClass: organizationalUnit
-ou: mediators
-
-dn: ou=suppliers,ou=people,dc=thetripps,dc=org
-objectClass: top
-objectClass: organizationalUnit
-ou: suppliers
-
-dn: cn=jsmith,ou=suppliers,ou=people,dc=thetripps,dc=org
+dn: cn=jsmith,ou=people,dc=thetripps,dc=org
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
 objectClass: dcObject
@@ -56,7 +41,7 @@ sn: Smith
 mail: jane.smith@supplier.com
 o: Nina
 
-dn: cn=admin,ou=mediators,ou=people,dc=thetripps,dc=org
+dn: cn=admin,ou=people,dc=thetripps,dc=org
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
 objectClass: dcObject
@@ -66,3 +51,21 @@ dc: people
 sn: Admin
 mail: admin@openmarketshealth.com
 o: Nina
+
+dn: cn=producers,ou=Groups,dc=thetripps,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: producers
+member: cn=jsmith,ou=people,dc=thetripps,dc=org
+
+dn: cn=admins,ou=Groups,dc=thetripps,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: admins
+member: cn=admin,ou=people,dc=thetripps,dc=org
+
+dn: cn=consumers,ou=Groups,dc=thetripps,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: consumers
+member: cn=jdoe,ou=people,dc=thetripps,dc=org

@@ -22,13 +22,13 @@
             response (handler
                       (mock/request :get "/credential/john.doe%40provider.com"))]
         (is (= (:status response) 200))
-        (is (= (parse-body (:body response))
-               {:document
+        (is (= {:document
                 {:cn    "jdoe"
-                 :dc    "people"
-                 :dn    "cn=jdoe,ou=providers,ou=people,dc=thetripps,dc=org"
+                 :dn    "cn=jdoe,ou=producers,ou=people,dc=thetripps,dc=org"
+                 :ou    "producers"
                  :sn    "Doe"
-                 :mail  "john.doe@provider.com"}}))))))
+                 :mail  "john.doe@provider.com"}}
+               (parse-body (:body response))))))))
 
 
 
@@ -36,8 +36,7 @@
   (with-storage
     (fn [store]
       (let [handler  (api-routes {:storage store})
-            record   {:dc   "ou=people"
-                      :mail "toby@tripp.test"
+            record   {:mail "toby@tripp.test"
                       :dn   "cn=toby,ou=moderator,ou=people,dc=thetripps,dc=org"
                       :sn   "Unknown"
                       :cn   "toby"}

@@ -2,7 +2,9 @@
   (:require [clj-ldap.client            :as ldap]
             [com.stuartsierra.component :as component]
             [buddy.hashers              :as hashers]
-            [taoensso.timbre            :as log]))
+            [clojure.spec.alpha :as s]
+            [nina-speaking.spec.ldap :as spec]
+            [taoensso.timbre :as log]))
 
 (def root-dn "dc=thetripps,dc=org")
 (def person-root-dn (str "ou=people," root-dn))
@@ -37,10 +39,9 @@
   ([store q dn] (search store q dn {:attributes result-keys}))
   ([{:keys [connection]} q base-dn options]
    (try
-     (log/infof "Search %s : %s" base-dn q)
      (ldap/search connection base-dn (merge options {:filter q}))
      (catch com.unboundid.ldap.sdk.LDAPSearchException e
-       (log/error "Search Exception" e)
+       (log/error e "Search Exception")
        []))))
 
 (defn all-people [store] (search store))
@@ -52,6 +53,25 @@
     (catch com.unboundid.ldap.sdk.LDAPSearchException e
       (log/error "Search Exception" e)
       [])))
+
+(defn dn-for
+  "Given an LDIF map `record`, return the fully-qualified DN for the
+  `record` in `root-dn`."
+  [record root-dn]
+  (let [{cn :cn [arity ou] :ou} (s/conform ::spec/record record)
+        ous                     (case arity
+                                  :one  (set [ou])
+                                  :many (set ou))
+        elements
+        (concat [(str "cn=" cn)]
+                (map #(str "ou=" %) (filter (comp not empty?) ous))
+                [root-dn])]
+    (try
+      (clojure.string/join "," elements)
+      (catch Exception e
+        (log/errorf "Failed to determine DN from %s: %s" record e)
+        (throw e)))))
+
 
 (defn add-record
   "Add a record at the given `DN` with the specified attributes to the
@@ -65,17 +85,24 @@
              m
              (filter #(% m) ks)))]
     (try
+      (log/infof "Insert DN `%s'…" dn)
       (if (ldap/get connection dn #{:cn})
-        (log/debugf "DN %s 👍" dn)
-        (ldap/add connection dn
-                  (log/spy
+        (do (log/debugf "DN %s 👍" dn)
+            (merge {:code 0} attributes))
+        (log/spy
+         (ldap/add connection dn
                    (hash-values attributes [:userPassword :password]))))
       (catch com.unboundid.ldap.sdk.LDAPSearchException e
-        (log/error "LDAP insert Exception" e)
+        (log/error e "LDAP insert Exception")
         attributes)
       (catch com.unboundid.ldap.sdk.LDAPException e
         (log/warn (format "LDAP insert failed: %s" attributes) e)
         attributes))))
+(s/fdef add-record
+  :args (s/cat :storage #(instance? CredentialStorage %)
+               :dn ::spec/dn
+               :attributes ::spec/record)
+  :ret (s/nilable ::spec/record))
 
 (defn add-records
   "Add a Map, `recordm` of records to the credential `store`.
@@ -89,8 +116,8 @@
              recordm))
 
 (defn add-role
-  "Assert that the given `role-name` is present in the credential store.  Create
-  it if not."
+  "Assert that the given `role-name` is present in the credential store.
+  Create it if not."
   [store role-name]
   (add-record store (str "ou=" role-name "," person-root-dn)
               {:objectClass #{"top" "organizationalUnit"}
@@ -102,19 +129,17 @@
 
   The provided `role` will be created iff it does not yet exist."
   [store {:keys [email role password] :as attrs}]
-  (log/infof "add-person: (%s) %s, %s, --redacted--" attrs email role)
+  (log/infof "add-person: %s, %s, --redacted--" email role)
   (let [[local domain] (clojure.string/split email #"@")
-        dn            (str "cn=" local ",ou=" role "," person-root-dn)]
+        dn             (str "cn=" local ",ou=" role "," person-root-dn)
+        ldif           (merge {:objectClass  #{"organizationalPerson" "inetOrgPerson" "top"}
+                               :sn           "Unknown"
+                               :userPassword password
+                               :mail         email}
+                              (select-keys attrs ldap-keys))]
+    (s/explain ::spec/record ldif)
     (add-role store role)
-    (add-record store
-                dn
-                (merge {:objectClass  #{"organizationalPerson" "inetOrgPerson"
-                                        "dcObject" "top"}
-                        :sn           "Unknown"
-                        :dc           "ou=people"
-                        :userPassword password
-                        :mail         email}
-                       (select-keys attrs ldap-keys)))
+    (add-record store dn ldif)
     (by-email store email)))
 
 (defn delete-record!
@@ -134,10 +159,10 @@
   "For LDAP servers that don't support the subtree control."
   [{:keys [connection] :as store} base-dn]
   (letfn [(children [dn]
-            (log/spy (search store "(objectclass=*)" dn
-                             {:attributes [:cn] :scope :subordinate})))
+            (search store "(objectclass=*)" dn
+                    {:attributes [:cn] :scope :subordinate}))
           (children? [dn]
-            (< 0 (log/spy (count (children dn)))))]
+            (< 0 (count (children dn))))]
     (doall
      (for [{:keys [dn]} (children base-dn)
            :when        (not (children? dn))]
