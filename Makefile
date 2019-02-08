@@ -1,5 +1,6 @@
+.PHONY: test
 DC   := docker-compose
-LEIN := $(DC) run nina
+LEIN := $(DC) run nina lein
 
 test:
 	$(LEIN) $@

@@ -12,13 +12,11 @@ services:
       - ./resources:${PWD}/resources
       - m2:/usr/local/lib/m2
       - ./log:${PWD}/log
-    command: repl
     ports:
       - 4888:5888
       - 8001:80
     depends_on:
       - ldap
-#    command: ring server-headless 80
 
   ldap:
     image: osixia/openldap:latest
@@ -33,19 +31,19 @@ services:
       - 389:389
       - 636:636
 
-  client:
-    build:
-      context: docker/client/
-    image: apache-directory-studio:2.0.0
-    ports:
-      - 6900:5900
+  admin:
+    image: osixia/phpldapadmin:0.7.2
     depends_on:
       - ldap
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: ldap
+    ports:
+      - 6443:443
+      - 6080:80
     volumes:
-      - client-home:/home/ldap/.ApacheDirectoryStudio
+      - ./config/php_admin.yml:/container/environment/01-custom/env.yaml
 
 volumes:
   m2:
   ldap-data:
   ldap-conf:
-  client-home:

@@ -1,0 +1,7 @@
+PHPLDAPADMIN_HTTPS: true
+PHPLDAPADMIN_LDAP_HOSTS:
+  - ldap:
+      - server:
+          - tls: false
+      - login:
+          - bind_id: cn=admin,dc=thetripps,dc=org
