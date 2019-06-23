@@ -32,11 +32,12 @@ services:
       - 636:636
 
   admin:
-    image: osixia/phpldapadmin:0.7.2
+    image: osixia/phpldapadmin:0.8.0
     depends_on:
       - ldap
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: ldap
+      PHPLDAPADMIN_HTTPS: "false"
     ports:
       - 6443:443
       - 6080:80
