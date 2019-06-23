@@ -8,7 +8,7 @@
             [cheshire.core :refer [parse-stream]]
 
             [nina-speaking.test-support.storage :refer :all]
-            [nina-speaking.data.storage.ldap            :as storage]
+            [nina-speaking.data.storage.ldap    :as storage]
             [nina-speaking.api.ldap :refer :all :as subject]))
 
 (defn parse-body [body]
@@ -56,8 +56,19 @@
                                true))))
         (testing "Location response"
           (let [follow-request
-                (mock/request :get (get-in response [:headers "Location"]))]
-            (is (= {:document record}
-                   (parse-stream (io/reader (:body (handler follow-request)))
-                                 true)))))))))
+                (mock/request :get (get-in response [:headers "Location"]))
+                {:keys [document]}
+                (parse-stream (io/reader (:body (handler follow-request)))
+                              true)]
+            (is (= record document))))
+
+        (testing "password hashing"
+          (let [password-hash
+                (-> (storage/search store "mail=toby@tripp.test"
+                                   (str "ou=people," storage/root-dn)
+                                   {})
+                   first
+                   :userPassword)]
+            (is (nina-speaking.lib.crypto/verify "angry-hippo-marble-run"
+                                                 password-hash))))))))
 

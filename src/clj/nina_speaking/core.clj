@@ -30,9 +30,9 @@
          conj
          (init
           {:ldap-host "ldap"
-           :dn         "cn=admin,dc=thetripps,dc=org"
-           :password   "omelet-sever-exposure-averse"
-           :port       80}))
+           :dn        "cn=admin,dc=thetripps,dc=org"
+           :password  "omelet-sever-exposure-averse"
+           :port      80}))
 
   (start)
   (stop)

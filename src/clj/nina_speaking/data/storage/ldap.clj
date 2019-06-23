@@ -1,8 +1,8 @@
 (ns nina-speaking.data.storage.ldap
   (:require [clj-ldap.client            :as ldap]
             [com.stuartsierra.component :as component]
-            [buddy.hashers              :as hashers]
             [clojure.spec.alpha :as s]
+            [nina-speaking.lib.crypto :as crypto]
             [nina-speaking.spec.ldap :as spec]
             [taoensso.timbre :as log]))
 
@@ -81,7 +81,7 @@
   [{:keys [connection]} dn attributes]
   (letfn [(hash-values [m ks]
             (reduce
-             (fn [m' k] (update m' k hashers/derive))
+             (fn [m' k] (update m' k crypto/hash))
              m
              (filter #(% m) ks)))]
     (try
@@ -132,7 +132,9 @@
   (log/infof "add-person: %s, %s, --redacted--" email role)
   (let [[local domain] (clojure.string/split email #"@")
         dn             (str "cn=" local ",ou=" role "," person-root-dn)
-        ldif           (merge {:objectClass  #{"organizationalPerson" "inetOrgPerson" "top"}
+        ldif           (merge {:objectClass  #{"organizationalPerson"
+                                               "inetOrgPerson"
+                                               "top"}
                                :sn           "Unknown"
                                :userPassword password
                                :mail         email}
